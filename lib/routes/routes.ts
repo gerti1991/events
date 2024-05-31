@@ -1,22 +1,39 @@
-import {NextFunction, Request, Response} from "express";
-import { MongoClient } from "mongodb";
-import { EventsAPIController } from "../controllers/EventsAPIController";
+import { NextFunction, Request, Response } from 'express';
+import { MongoClient, ObjectId } from 'mongodb';
+import { EventsAPIController } from '../controllers/EventsAPIController';
+import { exec } from 'child_process';
+const dotenv = require('dotenv');
+
+dotenv.config();
 
 export class Routes {
-    private readonly mongoUrl = "mongodb://localhost"; // Update with your MongoDB connection URL
-    private readonly dbName = "Events"; // Update with your database name
+    private readonly mongoUrl = process.env.MONGO_URI || 'mongodb://localhost:27017';
+    private readonly dbName = 'Events'; // Update with your database name
 
     public EventsAPIController: EventsAPIController = new EventsAPIController();
 
+    private client: MongoClient;
+    private eventsdatas;
+
+    constructor() {
+        this.client = new MongoClient(this.mongoUrl);
+        this.client.connect().then(() => {
+            const db = this.client.db(this.dbName);
+            this.eventsdatas = db.collection('eventsdatas');
+            console.log('Connected to MongoDB');
+        }).catch(err => {
+            console.error('Failed to connect to MongoDB', err);
+        });
+    }
+
     public routes(app): void {
-       
         // Initial Route
         app.route('/api/v1/')
-        .get((req: Request, res: Response) => {
-            res.status(200).send({
-                message: 'Welcome to Version 1.0.0 of Flashscore API!'
-            })
-        })
+            .get((req: Request, res: Response) => {
+                res.status(200).send({
+                    message: 'Welcome to Version 1.0.0 of Flashscore API!'
+                });
+            });
 
         // Authentication test route
         app.route('/api/v1/authenticate')
@@ -56,8 +73,47 @@ export class Routes {
                 }
             });
 
-            app.route('/api/v1/')
+        app.route('/api/v1/')
             .get((req: Request, res: Response, next: NextFunction) => {
                 next();
-            }, this.EventsAPIController.getAllEventsDates)
-        }}
+            }, this.EventsAPIController.getAllEventsDates);
+
+        // GET /eventsdatas: Retrieves event data
+        app.route('/api/v1/eventsdatas')
+            .get(async (req: Request, res: Response) => {
+                try {
+                    const players = await this.eventsdatas.find({}).toArray();
+                    const players_encoded = players.map(player => {
+                        const player_id = player._id.toString(); // Convert ObjectId to string
+                        delete player._id;
+                        return { ...player, _id: player_id };
+                    });
+                    res.json(players_encoded);
+                } catch (err) {
+                    res.status(500).send(err.toString());
+                }
+            });
+
+        // POST /run_script2: Runs specified Node.js scripts and returns their output
+        app.route('/api/v1/run_script2')
+            .post((req: Request, res: Response) => {
+                const scriptPath = './lib/cron/EventData2.js'; // Adjust the path as necessary
+
+                const runScript = (scriptName) => {
+                    return new Promise((resolve, reject) => {
+                        exec(`node ${scriptName}`, (error, stdout, stderr) => {
+                            if (error) {
+                                reject(stderr);
+                            } else {
+                                resolve(stdout);
+                            }
+                        });
+                    });
+                };
+
+                runScript(scriptPath)
+                    .then(output => res.json({ output }))
+                    .catch(error => res.status(500).json({ error }));
+            });
+    }
+}
