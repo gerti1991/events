@@ -22,7 +22,9 @@
     "mongose": "^0.0.2-security",
     "node-cron": "^3.0.3",
     "nodemon": "^3.1.0",
-    "puppeteer": "^22.7.1"
+    "puppeteer": "^22.10.0",
+    "puppeteer-extra": "^3.3.6",
+    "puppeteer-extra-plugin-stealth": "^2.11.2"
   },
   "devDependencies": {
     "@types/dotenv": "^8.2.0",
