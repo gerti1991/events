@@ -138,7 +138,7 @@ class App {
         //     });
         // });
 
-        cron.schedule('0 21 * * *', () => {
+        cron.schedule('00 21 * * *', () => {
             const lockFilePath = './deleteData.lock';
 
             // Check if lock file exists
@@ -166,6 +166,39 @@ class App {
             // Handle script exit
             scraperProcess.on('close', (code) => {
                 console.log(`deleteData.js script exited with code ${code}`);
+                // Remove lock file
+                fs.unlinkSync(lockFilePath);
+            });
+        });
+
+        cron.schedule('07 22 * * *', () => {
+            const lockFilePath = './ExpediaArbitrageCheck.lock';
+
+            // Check if lock file exists
+            if (fs.existsSync(lockFilePath)) {
+                console.log('Scraper already running. Skipping execution.');
+                return;
+            }
+
+            // Create lock file
+            fs.writeFileSync(lockFilePath, '');
+
+            console.log('Running ExpediaArbitrageCheck.js script...');
+            // Execute the deleteData.js script using child_process.spawn
+            const scraperProcess = childProcess.spawn('node', ['./lib/cron/ExpediaArbitrageCheck.js']);
+
+            // Log stdout and stderr from the deleteData.js script
+            scraperProcess.stdout.on('data', (data) => {
+                console.log(`stdout: ${data}`);
+            });
+
+            scraperProcess.stderr.on('data', (data) => {
+                console.error(`stderr: ${data}`);
+            });
+
+            // Handle script exit
+            scraperProcess.on('close', (code) => {
+                console.log(`ExpediaArbitrageCheck.js script exited with code ${code}`);
                 // Remove lock file
                 fs.unlinkSync(lockFilePath);
             });
