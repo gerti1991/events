@@ -75,10 +75,10 @@ export class Routes {
                 }
             });
 
-        app.route('/api/v1/')
-            .get((req: Request, res: Response, next: NextFunction) => {
-                next();
-            }, this.EventsAPIController.getAllEventsDates);
+        // app.route('/api/v1/')
+        //     .get((req: Request, res: Response, next: NextFunction) => {
+        //         next();
+        //     }, this.EventsAPIController.getAllEventsDates);
 
         // GET /eventsdatas: Retrieves event data
         app.route('/api/v1/eventsdatas')

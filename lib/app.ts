@@ -40,7 +40,7 @@ class App {
     }
 
     private scheduleCronJob(): void {
-        cron.schedule('29 21  * * *', () => {
+        cron.schedule('30 01  * * *', () => {
             const lockFilePath = './EventDates.lock';
 
             // Check if lock file exists
@@ -72,7 +72,7 @@ class App {
                 fs.unlinkSync(lockFilePath);
             });
         });
-        cron.schedule('00 22  * * *', () => {
+        cron.schedule('00 02  * * *', () => {
             const lockFilePath = './EventLinks.lock';
 
             // Check if lock file exists
@@ -138,7 +138,7 @@ class App {
         //     });
         // });
 
-        cron.schedule('00 21 * * *', () => {
+        cron.schedule('00 01 * * *', () => {
             const lockFilePath = './deleteData.lock';
 
             // Check if lock file exists
@@ -171,8 +171,8 @@ class App {
             });
         });
 
-        cron.schedule('07 22 * * *', () => {
-            const lockFilePath = './ExpediaArbitrageCheck.lock';
+        cron.schedule('38 07 * * *', () => {
+            const lockFilePath = './ExpediaMatches.lock';
 
             // Check if lock file exists
             if (fs.existsSync(lockFilePath)) {
@@ -183,9 +183,9 @@ class App {
             // Create lock file
             fs.writeFileSync(lockFilePath, '');
 
-            console.log('Running ExpediaArbitrageCheck.js script...');
+            console.log('Running ExpediaMatches.js script...');
             // Execute the deleteData.js script using child_process.spawn
-            const scraperProcess = childProcess.spawn('node', ['./lib/cron/ExpediaArbitrageCheck.js']);
+            const scraperProcess = childProcess.spawn('node', ['./lib/cron/ExpediaMatches.js']);
 
             // Log stdout and stderr from the deleteData.js script
             scraperProcess.stdout.on('data', (data) => {
@@ -198,7 +198,7 @@ class App {
 
             // Handle script exit
             scraperProcess.on('close', (code) => {
-                console.log(`ExpediaArbitrageCheck.js script exited with code ${code}`);
+                console.log(`ExpediaMatches.js script exited with code ${code}`);
                 // Remove lock file
                 fs.unlinkSync(lockFilePath);
             });
